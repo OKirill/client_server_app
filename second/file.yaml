@@ -1,0 +1,15 @@
+consoles:
+- XBOX ONE S
+- XBOX ONE X
+- PS4 Slim
+- PS4 PRO
+- NINTENDO SWITCH lite
+- NINTENDO SWITCH
+price:
+  NINTENDO SWITCH: 245$
+  NINTENDO SWITCH lite: 210$
+  PS4 PRO: 402$
+  PS4 Slim: 232$
+  XBOX ONE S: 223$
+  XBOX ONE X: 456$
+total_quantity: 6
