@@ -1,14 +1,14 @@
 "Утилиты для проекта"
 
 import json
-from backup.variables import MAX_BYTE_LENGTH, ENCODING
+from backup.variables import MAX_BYTES_LENGTH, ENCODING
 
 
 def rec_message(client):
     """Утилита которую мы будем часто использовать для получания и декодирования наших сообщений
     поэтому она будет вынесена в отдельный файл для удобства
     """
-    response_after_encod = client.recv(MAX_BYTE_LENGTH)
+    response_after_encod = client.recv(MAX_BYTES_LENGTH)
     if isinstance(response_after_encod, bytes):
         json_resp = response_after_encod.decode(ENCODING)
         response = json.loads(json_resp)

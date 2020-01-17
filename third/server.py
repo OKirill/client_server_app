@@ -1,8 +1,8 @@
 import socket
 import sys
 import json
-from backup.variables import ACTION, ACCOUNT_NAME, RESPONSE, MAX_CONNECTIONS, PRESENCE, TIME, USER, ERROR, DEF_IP, \
-    DEF_IP_ADRRES
+from backup.variables import ACTION, ACCOUNT_NAME, RESPONSE, MAX_CONNECTIONS, PRESENCE, TIME, USER, ERROR, DEF_PORT, \
+    DEF_IP_ADRRES, MAX_BYTES_LENGTH, DEF_IP
 from backup.utils import rec_message, transmit_message
 
 
@@ -20,7 +20,7 @@ def main():
         if '-p' in sys.argv:
             listner_to_the_port = int(sys.argv[sys.argv.index('-p') + 1])
         else:
-            listner_to_the_port = DEF_IP
+            listner_to_the_port = DEF_PORT
         if listner_to_the_port < 1024 or listner_to_the_port > 65535:
             raise ValueError
     except IndexError:
