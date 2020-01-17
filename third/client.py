@@ -1,12 +1,23 @@
+"""
+
+Клиентская часть приложения
+
+"""
 import sys
 import json
 import socket
 import time
-from backup.variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, RESPONSE, ERROR, DEF_IP, DEF_PORT, MAX_BYTES_LENGTH
+from backup.variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, \
+    RESPONSE, ERROR, DEF_IP, DEF_PORT
 from backup.utils import rec_message, transmit_message
 
 
-def  show_presence(account_name='Guest'):
+def show_presence(account_name='Guest'):
+    """
+    Функция для генерации запроса о статусе на присутствие клиента
+    :param account_name:
+    :return:
+    """
     output = {
         ACTION: PRESENCE,
         TIME: time.time(),
@@ -18,6 +29,11 @@ def  show_presence(account_name='Guest'):
 
 
 def ans_handling(message):
+    """
+    Процессинг ответа от сервера
+    :param message:
+    :return:
+    """
     if RESPONSE in message:
         if message[RESPONSE] == 200:
             return '200 : OK'
@@ -26,6 +42,10 @@ def ans_handling(message):
 
 
 def main():
+    """
+    выгружаем необходимые параметры
+    :return:
+    """
     try:
         server_adress = sys.argv[1]
         server_port = input(sys.argv[2])
@@ -47,6 +67,7 @@ def main():
         print(answer)
     except (ValueError, json.JSONDecodeError):
         print('Декодирование сообщения провалилось')
+
 
 if __name__ == '__main__':
     main()

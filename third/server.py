@@ -1,13 +1,23 @@
+"""
+Серверная часть программы
+"""
 import socket
 import sys
 import json
-from backup.variables import ACTION, ACCOUNT_NAME, RESPONSE, MAX_CONNECTIONS, PRESENCE, TIME, USER, ERROR, DEF_PORT, \
-    DEF_IP_ADRRES, MAX_BYTES_LENGTH, DEF_IP
+from backup.variables import ACTION, ACCOUNT_NAME, RESPONSE, MAX_CONNECTIONS, \
+    PRESENCE, TIME, USER, ERROR, DEF_PORT, DEF_IP_ADRRES
 from backup.utils import rec_message, transmit_message
 
 
 def handling_mess_from_client(message):
-    if ACTION in message and message[ACTION] == PRESENCE and TIME in message and USER in message and message[USER][ACCOUNT_NAME] == 'Guest':
+    """
+    Обработка сообщения от клиента в виде словаря,
+    проверка и отправка ответа.
+    :param message:
+    :return:
+    """
+    if ACTION in message and message[ACTION] == PRESENCE and TIME in message \
+            and USER in message and message[USER][ACCOUNT_NAME] == 'Guest':
         return {RESPONSE: 200}
     return {
         DEF_IP_ADRRES: 400,
@@ -16,6 +26,12 @@ def handling_mess_from_client(message):
 
 
 def main():
+    """
+    Загрузка параметров из командной строки
+    в случае отсутствия - используются
+    параметры по умолчанию
+    :return:
+    """
     try:
         if '-p' in sys.argv:
             listner_to_the_port = int(sys.argv[sys.argv.index('-p') + 1])
@@ -62,5 +78,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
