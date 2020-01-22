@@ -7,7 +7,7 @@ from backup.variables import RESPONSE, ERROR, USER, ACCOUNT_NAME, TIME, ACTION, 
 from client import show_presence, ans_handling
 
 
-class Class4Testing(unittest.TestCase):
+class ClassForTesting(unittest.TestCase):
 
 
     """Class for testing """
@@ -30,4 +30,5 @@ class Class4Testing(unittest.TestCase):
         """Test without response """
         self.assertRaises(ValueError, ans_handling, {ERROR: 'False Request'})
 
-if __name__ == '__main__'
+if __name__ == '__main__':
+    unittest.main()
