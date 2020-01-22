@@ -41,7 +41,7 @@ class Tests(unittest.TestCase):
     test_dict_recv_ok = {RESPONSE: 200}
     test_dict_recv_err = {
         RESPONSE: 400,
-        ERROR: 'Bad Request'
+        ERROR: 'False Request'
     }
 
     def test_send_message(self):

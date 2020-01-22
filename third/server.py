@@ -20,8 +20,8 @@ def handling_mess_from_client(message):
             and USER in message and message[USER][ACCOUNT_NAME] == 'Guest':
         return {RESPONSE: 200}
     return {
-        DEF_IP_ADRRES: 400,
-        ERROR: 'Not a complete Request'
+        RESPONSE: 400,
+        ERROR: 'False Request'
     }
 
 

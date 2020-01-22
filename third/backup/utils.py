@@ -24,6 +24,8 @@ def transmit_message(sock, message):
     Тоже самое что и первая утилита только для отправки
 
     """
+    if not isinstance(message, dict):
+        raise TypeError
     js_message = json.dumps(message)
     message_after_encode = js_message.encode(ENCODING)
     sock.send(message_after_encode)
