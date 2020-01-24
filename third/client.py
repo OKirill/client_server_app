@@ -48,7 +48,7 @@ def ans_handling(message):
         if message[RESPONSE] == 200:
             return '200 : OK'
         return f'400 : {message[ERROR]}'
-    raise ReqFieldMissingError
+    raise ReqFieldMissingError(RESPONSE)
 
 
 def parser_handling():
