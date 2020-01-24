@@ -12,7 +12,6 @@ from backup.variables import ACTION, ACCOUNT_NAME, RESPONSE, MAX_CONNECTIONS, \
     PRESENCE, TIME, USER, ERROR, DEF_PORT, DEF_IP_ADRRES
 from backup.utils import rec_message, transmit_message
 
-
 SERVER_LOGGER = logging.getLogger('server')
 
 
@@ -51,7 +50,7 @@ def main():
     параметры по умолчанию
     :return:
     """
-    parser = create_arg_parser()
+    parser = parser_handling()
     namespace = parser.parse_args(sys.argv[1:])
     listen_address = namespace.a
     listen_port = namespace.p
@@ -82,7 +81,7 @@ def main():
     #     print('Укажите адресс который будет прослушивать сервер после параметра -\'a\'.')
     #     sys.exit(1)
 
-    if not 1023 < server_port < 65536:
+    if not 1023 < listen_port < 65536:
         SERVER_LOGGER.critical(
             f'Запуск сервера с неправильным портом: {listen_port}.'
             f' Используйте адреса в диапазоне 1024-65535.'
@@ -91,8 +90,7 @@ def main():
 
     SERVER_LOGGER.info(
         f'Сервер запущен с портом для подключения: {listen_port}'
-        f'адрес сервера: {listen_address}'
-
+        f'адрес сервера: {listen_address}')
 
     forward = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     forward.bind((listen_address, listen_port))
@@ -116,7 +114,7 @@ def main():
             )
             client.close()
         except IncorrectDataReceivedError:
-            SERVER_LOGGER.error(f'От клиента {client_adress} gриняты некорректные данные. '
+            SERVER_LOGGER.error(f'От клиента {client_adress} приняты некорректные данные. '
                                 f'Соединение закрывается.')
             client.close()
 

@@ -57,7 +57,7 @@ def parser_handling():
     :return:
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('address', default=DEF_IP, nargs='?')
+    parser.add_argument('addr', default=DEF_IP, nargs='?')
     parser.add_argument('port', default=DEF_PORT, nargs='?')
     return parser
 
@@ -111,7 +111,7 @@ def main():
         )
     except ConnectionRefusedError:
         CLIENT_LOGGER.critical(
-            f'Не удалось соедениться с сервером {server_address}:{server_port}, '
+            f'Не удалось соедениться с сервером {server_adress}:{server_port}, '
             f'удаленный компьютер отверг запрос на подключение.'
         )
 
