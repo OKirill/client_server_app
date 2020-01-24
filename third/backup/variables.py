@@ -1,4 +1,6 @@
 """Постоянные для проекта"""
+import logging
+
 
 DEF_PORT = 7777
 
@@ -10,6 +12,7 @@ MAX_BYTES_LENGTH = 1024
 
 ENCODING = 'utf-8'
 
+LOGGING_LEVEL = logging.DEBUG
 # ОСНОВНЫЕ КЛЮЧИ JIM ПРОТОКОЛА:
 
 ACTION = 'action'
