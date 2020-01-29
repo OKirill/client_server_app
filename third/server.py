@@ -11,10 +11,13 @@ from errors import IncorrectDataReceivedError
 from backup.variables import ACTION, ACCOUNT_NAME, RESPONSE, MAX_CONNECTIONS, \
     PRESENCE, TIME, USER, ERROR, DEF_PORT, DEF_IP_ADRRES
 from backup.utils import rec_message, transmit_message
+from decos import log
 
-SERVER_LOGGER = logging.getLogger('server')
+
+LOGGER = logging.getLogger('server')
 
 
+@log
 def handling_mess_from_client(message):
     """
     Обработка сообщения от клиента в виде словаря,
@@ -22,7 +25,7 @@ def handling_mess_from_client(message):
     :param message:
     :return:
     """
-    SERVER_LOGGER.debug(f'Обработка сообщения клиента: {message}')
+    LOGGER.debug(f'Обработка сообщения клиента: {message}')
     if ACTION in message and message[ACTION] == PRESENCE and TIME in message \
             and USER in message and message[USER][ACCOUNT_NAME] == 'Guest':
         return {RESPONSE: 200}
@@ -32,6 +35,7 @@ def handling_mess_from_client(message):
     }
 
 
+@log
 def parser_handling():
     """
     Пробегаем по аргументам терминала
@@ -82,13 +86,13 @@ def main():
     #     sys.exit(1)
 
     if not 1023 < listen_port < 65536:
-        SERVER_LOGGER.critical(
+        LOGGER.critical(
             f'Запуск сервера с неправильным портом: {listen_port}.'
             f' Используйте адреса в диапазоне 1024-65535.'
         )
         sys.exit(1)
 
-    SERVER_LOGGER.info(
+    LOGGER.info(
         f'Сервер запущен с портом для подключения: {listen_port}'
         f'адрес сервера: {listen_address}')
 
@@ -101,20 +105,20 @@ def main():
         client, client_adress = forward.accept()
         try:
             message_from_client = rec_message(client)
-            SERVER_LOGGER.debug(f'Получено сообщение {message_from_client}')
+            LOGGER.debug(f'Получено сообщение {message_from_client}')
             response = handling_mess_from_client(message_from_client)
-            SERVER_LOGGER.info(f'Создан ответ для клиента {response}')
+            LOGGER.info(f'Создан ответ для клиента {response}')
             transmit_message(client, response)
-            SERVER_LOGGER.debug(f'Сеанс с клиентом {client_adress} завершен.')
+            LOGGER.debug(f'Сеанс с клиентом {client_adress} завершен.')
             client.close()
         except json.JSONDecodeError:
-            SERVER_LOGGER.error(
+            LOGGER.error(
                 f'Не удалось обработать Json  полученый от '
                 f'клиента {client_adress}. Сеанс завершен.'
             )
             client.close()
         except IncorrectDataReceivedError:
-            SERVER_LOGGER.error(f'От клиента {client_adress} приняты некорректные данные. '
+            LOGGER.error(f'От клиента {client_adress} приняты некорректные данные. '
                                 f'Соединение закрывается.')
             client.close()
 

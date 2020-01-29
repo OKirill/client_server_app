@@ -14,12 +14,13 @@ from errors import ReqFieldMissingError
 from backup.variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, \
     RESPONSE, ERROR, DEF_IP, DEF_PORT
 from backup.utils import rec_message, transmit_message
+from decos import log
 
 
 # init client log
-CLIENT_LOGGER = logging.getLogger('client')
+LOGGER = logging.getLogger('client')
 
-
+@log
 def show_presence(account_name='Guest'):
     """
     Функция для генерации запроса о статусе на присутствие клиента
@@ -33,17 +34,18 @@ def show_presence(account_name='Guest'):
             ACCOUNT_NAME: account_name
         }
     }
-    CLIENT_LOGGER.debug(f'Создано {PRESENCE} сообщения для ююзера {account_name}')
+    LOGGER.debug(f'Создано {PRESENCE} сообщения для ююзера {account_name}')
     return output
 
 
+@log
 def ans_handling(message):
     """
     Процессинг ответа от сервера
     :param message:
     :return:
     """
-    CLIENT_LOGGER.debug(f'Расшифровка ответа от сервера: {message}')
+    LOGGER.debug(f'Расшифровка ответа от сервера: {message}')
     if RESPONSE in message:
         if message[RESPONSE] == 200:
             return '200 : OK'
@@ -51,6 +53,7 @@ def ans_handling(message):
     raise ReqFieldMissingError(RESPONSE)
 
 
+@log
 def parser_handling():
     """
     Пробегаем по аргументам терминала
@@ -73,13 +76,13 @@ def main():
     server_port = namespace.port
 
     if not 1023 < server_port < 65536:
-        CLIENT_LOGGER.critical(
+        LOGGER.critical(
             f'Запуск клиента с неправильным портом: {server_port}.'
             f' Используйте адреса в диапазоне 1024-65535.'
         )
         sys.exit(1)
 
-    CLIENT_LOGGER.info(
+    LOGGER.info(
             f'Клиен работает с параметрами:'
             f'адрес сервера: {server_adress}, порт: {server_port}'
                        )
@@ -100,17 +103,17 @@ def main():
         msg_to_server = show_presence()
         transmit_message(forward, msg_to_server)
         answer = ans_handling(rec_message(forward))
-        CLIENT_LOGGER.info(f'Получен ответ от сервера {answer}')
+        LOGGER.info(f'Получен ответ от сервера {answer}')
         print(answer)
     except json.JSONDecodeError:
-        CLIENT_LOGGER.error('Не удалось декодировать полученную Json строку.')
+        LOGGER.error('Не удалось декодировать полученную Json строку.')
     except ReqFieldMissingError as miss_error:
-        CLIENT_LOGGER.error(
+        LOGGER.error(
             f'В полученных данных отсутствует необходимое поле'
             f'{miss_error.missing_field}'
         )
     except ConnectionRefusedError:
-        CLIENT_LOGGER.critical(
+        LOGGER.critical(
             f'Не удалось соедениться с сервером {server_adress}:{server_port}, '
             f'удаленный компьютер отверг запрос на подключение.'
         )
