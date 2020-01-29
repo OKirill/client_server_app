@@ -30,5 +30,6 @@ class ClassForTesting(unittest.TestCase):
         """Test without response """
         self.assertRaises(ValueError, ans_handling, {ERROR: 'False Request'})
 
+
 if __name__ == '__main__':
     unittest.main()
