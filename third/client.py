@@ -16,9 +16,9 @@ from backup.variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, \
 from backup.utils import rec_message, transmit_message
 from decos import log
 
-
 # init client log
 LOGGER = logging.getLogger('client')
+
 
 @log
 def show_presence(account_name='Guest'):
@@ -83,9 +83,9 @@ def main():
         sys.exit(1)
 
     LOGGER.info(
-            f'Клиен работает с параметрами:'
-            f'адрес сервера: {server_adress}, порт: {server_port}'
-                       )
+        f'Клиент работает с параметрами:'
+        f'адрес сервера: {server_adress}, порт: {server_port}'
+    )
     # try:
     #     server_adress = sys.argv[1]
     #     server_port = input(sys.argv[2])
