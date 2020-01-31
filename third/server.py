@@ -168,7 +168,8 @@ def main():
         # Проверяем на наличие ждущих клиентов
         try:
             if clients:
-                recv_data_lst, send_data_lst, err_lst = select.select(clients, clients, [], 0)
+                recv_data_lst, send_data_lst, err_lst = select.select(
+                    clients, clients, [], 0)
         except OSError:
             pass
 
@@ -179,12 +180,13 @@ def main():
                 try:
                     handling_mess_from_client(rec_message(client_with_message),
                                               messages, client_with_message)
-                except:
+                except BaseException:
                     LOGGER.info(f'Клиент {client_with_message.getpeername()} '
                                 f'отключился от сервера.')
                     clients.remove(client_with_message)
 
-        # Если есть сообщения для отправки и ожидающие клиенты, отправляем им сообщение.
+        # Если есть сообщения для отправки и ожидающие клиенты, отправляем им
+        # сообщение.
         if messages and send_data_lst:
             message = {
                 ACTION: MESSAGE,
@@ -196,8 +198,9 @@ def main():
             for waiting_client in send_data_lst:
                 try:
                     transmit_message(waiting_client, message)
-                except:
-                    LOGGER.info(f'Клиент {waiting_client.getpeername()} отключился от сервера.')
+                except BaseException:
+                    LOGGER.info(
+                        f'Клиент {waiting_client.getpeername()} отключился от сервера.')
                     clients.remove(waiting_client)
 
 

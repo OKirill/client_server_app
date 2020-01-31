@@ -32,7 +32,8 @@ def transmission_from_server(message):
         LOGGER.info(f'Поступило сообщение от пользователя '
                     f'{message[SENDER]}:\n{message[MESSAGE_TEXT]}')
     else:
-        LOGGER.error(f'Сервер не смог обработать и отправить некорректное сообщение: {message}')
+        LOGGER.error(
+            f'Сервер не смог обработать и отправить некорректное сообщение: {message}')
 
 
 @log
@@ -40,7 +41,8 @@ def create_message(sock, account_name='Guest'):
     """Функция принимает сообщение и возращает его обратно и
     так же обрабатывает команды по запросу
     """
-    message = input('Введите сообщение которое хотите послать или \'~\' для завершения работы: ')
+    message = input(
+        'Введите сообщение которое хотите послать или \'~\' для завершения работы: ')
     if message == '~':
         sock.close()
         LOGGER.info('Пользователь завершил работу.')
@@ -174,8 +176,7 @@ def main():
     except ConnectionRefusedError:
         LOGGER.critical(
             f'Не удалось соедениться с сервером {server_address}:{server_port}, '
-            f'удаленный компьютер отверг запрос на подключение.'
-        )
+            f'удаленный компьютер отверг запрос на подключение.')
         sys.exit(1)
     else:
         # Основной цикл программы если все настроено как надо
@@ -189,7 +190,8 @@ def main():
                 try:
                     transmit_message(forward, create_message(forward))
                 except (ConnectionResetError, ConnectionError, ConnectionAbortedError):
-                    LOGGER.error(f'Соединение с сервером {server_address} было потеряно.')
+                    LOGGER.error(
+                        f'Соединение с сервером {server_address} было потеряно.')
                     sys.exit(1)
 
             # Режим работы приём:
@@ -197,10 +199,11 @@ def main():
                 try:
                     transmission_from_server(rec_message(forward))
                 except (ConnectionResetError, ConnectionError, ConnectionAbortedError):
-                    LOGGER.error(f'Соединение с сервером {server_address} было потеряно.')
+                    LOGGER.error(
+                        f'Соединение с сервером {server_address} было потеряно.')
                     sys.exit(1)
 
-        # forward = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # forward = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # forward.connect((server_address, server_port))
     # msg_to_server = show_presence()
     # transmit_message(forward, msg_to_server)

@@ -1,11 +1,11 @@
 """Server tests"""
+from backup.variables import RESPONSE, ERROR, USER, ACCOUNT_NAME, TIME, ACTION, PRESENCE
+from server import handling_mess_from_client
 import sys
 import os
 import unittest
 
 sys.path.append(os.path.join(os.getcwd(), '..'))
-from server import handling_mess_from_client
-from backup.variables import RESPONSE, ERROR, USER, ACCOUNT_NAME, TIME, ACTION, PRESENCE
 
 
 class TestServerClass(unittest.TestCase):
