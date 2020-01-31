@@ -12,7 +12,7 @@ import logging
 import logs.config_client_log
 from errors import ReqFieldMissingError, ServerError
 from backup.variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, \
-    RESPONSE, ERROR, DEF_IP, DEF_PORT
+    RESPONSE, ERROR, DEF_IP, DEF_PORT, MESSAGE, MESSAGE_TEXT, SENDER
 from backup.utils import rec_message, transmit_message
 from decos import log
 
@@ -33,6 +33,27 @@ def transmission_from_server(message):
                     f'{message[SENDER]}:\n{message[MESSAGE_TEXT]}')
     else:
         LOGGER.error(f'Сервер не смог обработать и отправить некорректное сообщение: {message}')
+
+
+@log
+def create_message(sock, account_name='Guest'):
+    """Функция запрашивает текст сообщения и возвращает его.
+    Так же завершает работу при вводе подобной комманды
+    """
+    message = input('Введите сообщение для отправки или \'!!!\' для завершения работы: ')
+    if message == '!!!':
+        sock.close()
+        LOGGER.info('Завершение работы по команде пользователя.')
+        print('Спасибо за использование нашего сервиса!')
+        sys.exit(0)
+    message_dict = {
+        ACTION: MESSAGE,
+        TIME: time.time(),
+        ACCOUNT_NAME: account_name,
+        MESSAGE_TEXT: message
+    }
+    LOGGER.debug(f'Сформирован словарь сообщения: {message_dict}')
+    return message_dict
 
 
 @log

@@ -19,10 +19,12 @@ ACTION = 'action'
 TIME = 'time'
 USER = 'user'
 ACCOUNT_NAME = 'account_name'
-
+SENDER = 'sender'
 # Дополнительные ключи для протокола
 
 PRESENCE = 'presence'
 RESPONSE = 'response'
 ERROR = 'error'
+MESSAGE = 'message'
+MESSAGE_TEXT = 'mess_text'
 DEF_IP_ADRRES = 'def_ip_adrres'
