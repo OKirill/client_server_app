@@ -37,14 +37,14 @@ def transmission_from_server(message):
 
 @log
 def create_message(sock, account_name='Guest'):
-    """Функция запрашивает текст сообщения и возвращает его.
-    Так же завершает работу при вводе подобной комманды
+    """Функция принимает сообщение и возращает его обратно и
+    так же обрабатывает команды по запросу
     """
-    message = input('Введите сообщение для отправки или \'!!!\' для завершения работы: ')
-    if message == '!!!':
+    message = input('Введите сообщение которое хотите послать или \'~\' для завершения работы: ')
+    if message == '~':
         sock.close()
-        LOGGER.info('Завершение работы по команде пользователя.')
-        print('Спасибо за использование нашего сервиса!')
+        LOGGER.info('Пользователь завершил работу.')
+        print('Благодарим за то что выбрали наш мессенджер!')
         sys.exit(0)
     message_dict = {
         ACTION: MESSAGE,
@@ -85,7 +85,8 @@ def ans_handling(message):
     if RESPONSE in message:
         if message[RESPONSE] == 200:
             return '200 : OK'
-        return f'400 : {message[ERROR]}'
+        elif message[RESPONSE] == 400:
+            raise ServerError(f'400 : {message[ERROR]}')
     raise ReqFieldMissingError(RESPONSE)
 
 
@@ -98,7 +99,24 @@ def parser_handling():
     parser = argparse.ArgumentParser()
     parser.add_argument('addr', default=DEF_IP, nargs='?')
     parser.add_argument('port', default=DEF_PORT, nargs='?')
-    return parser
+    parser.add_argument('-m', '--mode', default='listen', nargs='?')
+    namespace = parser.parse_args(sys.argv[1:])
+    server_address = namespace.addr
+    server_port = namespace.port
+    client_mode = namespace.mode
+
+    if not 1023 < server_port < 65536:
+        LOGGER.critical(
+            f'Попытка запуска клиента с неподходящим номером порта: {server_port}. '
+            f'Допустимы адреса с 1024 до 65535. Клиент завершается.')
+        sys.exit(1)
+
+    if client_mode not in ('listen', 'send'):
+        LOGGER.critical(f'Указан недопустимый режим работы {client_mode}, '
+                        f'допустимые режимы: listen , send')
+        sys.exit(1)
+
+    return server_address, server_port, client_mode
 
 
 def main():
@@ -106,56 +124,84 @@ def main():
     выгружаем необходимые параметры
     :return:
     """
-    parser = parser_handling()
-    namespace = parser.parse_args(sys.argv[1:])
-    server_adress = namespace.addr
-    server_port = namespace.port
-
-    if not 1023 < server_port < 65536:
-        LOGGER.critical(
-            f'Запуск клиента с неправильным портом: {server_port}.'
-            f' Используйте адреса в диапазоне 1024-65535.'
-        )
-        sys.exit(1)
+    server_address, server_port, client_mode = parser_handling()
 
     LOGGER.info(
-        f'Клиент работает с параметрами:'
-        f'адрес сервера: {server_adress}, порт: {server_port}'
-    )
+        f'Запущен клиент с парамертами: адрес сервера: {server_address}, '
+        f'порт: {server_port}, режим работы: {client_mode}')
+
+    # if not 1023 < server_port < 65536:
+    #     LOGGER.critical(
+    #         f'Запуск клиента с неправильным портом: {server_port}.'
+    #         f' Используйте адреса в диапазоне 1024-65535.'
+    #     )
+    #     sys.exit(1)
+    #
+    # LOGGER.info(
+    #     f'Клиент работает с параметрами:'
+    #     f'адрес сервера: {server_address}, порт: {server_port}'
+    # )
     # try:
-    #     server_adress = sys.argv[1]
+    #     server_address = sys.argv[1]
     #     server_port = input(sys.argv[2])
     #     if server_port < 1024 or server_port > 65535:
     #         raise ValueError
     # except IndexError:
-    #     server_adress = DEF_IP
+    #     server_address = DEF_IP
     #     server_port = DEF_PORT
     # except ValueError:
     #     print('Укажите чилос в диапазоне 1024 - 65535')
     #     sys.exit(1)
     try:
         forward = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        forward.connect((server_adress, server_port))
-        msg_to_server = show_presence()
-        transmit_message(forward, msg_to_server)
+        forward.connect((server_address, server_port))
+        transmit_message(forward, show_presence())
         answer = ans_handling(rec_message(forward))
         LOGGER.info(f'Получен ответ от сервера {answer}')
-        print(answer)
+        print(f'Установлено соединение с сервером.')
     except json.JSONDecodeError:
         LOGGER.error('Не удалось декодировать полученную Json строку.')
+        sys.exit(1)
+    except ServerError as error:
+        LOGGER.error(f'Сервер выявил ошибку при подключении: {error.text}')
+        sys.exit(1)
     except ReqFieldMissingError as miss_error:
         LOGGER.error(
             f'В полученных данных отсутствует необходимое поле'
             f'{miss_error.missing_field}'
         )
+        sys.exit(1)
     except ConnectionRefusedError:
         LOGGER.critical(
-            f'Не удалось соедениться с сервером {server_adress}:{server_port}, '
+            f'Не удалось соедениться с сервером {server_address}:{server_port}, '
             f'удаленный компьютер отверг запрос на подключение.'
         )
+        sys.exit(1)
+    else:
+        # Основной цикл программы если все настроено как надо
+        if client_mode == 'send':
+            print('Режим работы - отправка сообщений.')
+        else:
+            print('Режим работы - приём сообщений.')
+        while True:
+            # режим работы - отправка сообщений
+            if client_mode == 'send':
+                try:
+                    transmit_message(forward, create_message(forward))
+                except (ConnectionResetError, ConnectionError, ConnectionAbortedError):
+                    LOGGER.error(f'Соединение с сервером {server_address} было потеряно.')
+                    sys.exit(1)
+
+            # Режим работы приём:
+            if client_mode == 'listen':
+                try:
+                    transmission_from_server(rec_message(forward))
+                except (ConnectionResetError, ConnectionError, ConnectionAbortedError):
+                    LOGGER.error(f'Соединение с сервером {server_address} было потеряно.')
+                    sys.exit(1)
 
         # forward = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # forward.connect((server_adress, server_port))
+    # forward.connect((server_address, server_port))
     # msg_to_server = show_presence()
     # transmit_message(forward, msg_to_server)
     # try:
