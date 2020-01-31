@@ -10,7 +10,7 @@ import time
 import argparse
 import logging
 import logs.config_client_log
-from errors import ReqFieldMissingError
+from errors import ReqFieldMissingError, ServerError
 from backup.variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, \
     RESPONSE, ERROR, DEF_IP, DEF_PORT
 from backup.utils import rec_message, transmit_message
@@ -18,6 +18,21 @@ from decos import log
 
 # init client log
 LOGGER = logging.getLogger('client')
+
+
+@log
+def transmission_from_server(message):
+    """
+    Функция обработки сообщений переданных на сервер
+    """
+    if ACTION in message and message[ACTION] == MESSAGE and \
+            SENDER in message and MESSAGE_TEXT in message:
+        print(f'Поступило сообщение от пользователя '
+              f'{message[SENDER]}:\n{message[MESSAGE_TEXT]}')
+        LOGGER.info(f'Поступило сообщение от пользователя '
+                    f'{message[SENDER]}:\n{message[MESSAGE_TEXT]}')
+    else:
+        LOGGER.error(f'Сервер не смог обработать и отправить некорректное сообщение: {message}')
 
 
 @log
