@@ -9,6 +9,15 @@ class IncorrectDataReceivedError(Exception):
         return "Received incorrect message from PC"
 
 
+class ServerError(Exception):
+    """Server error"""
+    def __init__(self, text):
+        self.text = text
+
+    def __str__(self):
+        return self.text
+
+
 class NoDictInputError(Exception):
     """
     exception argument not a dict
