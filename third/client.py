@@ -83,16 +83,6 @@ def create_message(sock, account_name='Guest'):
         sys.exit(1)
 
 
-def print_help():
-    """
-    Функция справка
-    """
-    print('Список команд:')
-    print('message - отправить сообщение. Кому и текст будет запрошены отдельно.')
-    print('help - вывести подсказки по командам')
-    print('exit - выход из программы')
-
-
 @log
 def user_interactive(sock, username):
     """
@@ -117,7 +107,7 @@ def user_interactive(sock, username):
 
 
 @log
-def show_presence(account_name='Guest'):
+def show_presence(account_name):
     """
     Функция для генерации запроса о статусе на присутствие клиента
     :param account_name:
@@ -132,6 +122,16 @@ def show_presence(account_name='Guest'):
     }
     LOGGER.debug(f'Создано {PRESENCE} сообщения для ююзера {account_name}')
     return output
+
+
+def print_help():
+    """
+    Функция справка
+    """
+    print('Список команд:')
+    print('message - отправить сообщение. Кому и текст будет запрошены отдельно.')
+    print('help - вывести подсказки по командам')
+    print('exit - выход из программы')
 
 
 @log
@@ -159,11 +159,11 @@ def parser_handling():
     parser = argparse.ArgumentParser()
     parser.add_argument('addr', default=DEF_IP, nargs='?')
     parser.add_argument('port', default=DEF_PORT, type=int, nargs='?')
-    parser.add_argument('-m', '--mode', default=None, nargs='?')
+    parser.add_argument('-n', '--name', default=None, nargs='?')
     namespace = parser.parse_args(sys.argv[1:])
     server_address = namespace.addr
     server_port = namespace.port
-    client_mode = namespace.mode
+    client_name = namespace.name
 
     if not 1023 < server_port < 65536:
         LOGGER.critical(
@@ -171,7 +171,7 @@ def parser_handling():
             f'Допустимы адреса с 1024 до 65535. Клиент завершается.')
         sys.exit(1)
 
-    return server_address, server_port, client_mode
+    return server_address, server_port, client_name
 
 
 def main():
