@@ -19,7 +19,8 @@ ACTION = 'action'
 TIME = 'time'
 USER = 'user'
 ACCOUNT_NAME = 'account_name'
-SENDER = 'sender'
+SENDER = 'from'
+DESTINATION = 'to'
 # Дополнительные ключи для протокола
 
 PRESENCE = 'presence'
@@ -28,3 +29,12 @@ ERROR = 'error'
 MESSAGE = 'message'
 MESSAGE_TEXT = 'mess_text'
 DEF_IP_ADRRES = 'def_ip_adrres'
+
+RESPONSE_200 = {RESPONSE: 200}
+
+RESPONSE_400 = {
+    RESPONSE: 400,
+    ERROR: None
+}
+
+
