@@ -29,6 +29,7 @@ ERROR = 'error'
 MESSAGE = 'message'
 MESSAGE_TEXT = 'mess_text'
 DEF_IP_ADRRES = 'def_ip_adrres'
+EXIT = 'exit'
 
 RESPONSE_200 = {RESPONSE: 200}
 
