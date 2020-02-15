@@ -9,18 +9,15 @@ import os
 import subprocess
 from ipaddress import ip_address
 
-hostsList = ['185.60.112.157', '8.8.8.8', 'battle.net']  # список проверяемых хостов
-result = {'Доступные узлы':"", 'Недоступные узлы':""}  # словарь с результатами (для задания 3)
+hostsList = ['185.60.112.157', '8.8.8.8', 'battle.net']
+result = {'Доступные узлы':"", 'Недоступные узлы':""}
 
-DNL = open(os.devnull, 'w')  # заглушка, чтобы поток не выводился на экран
+DNL = open(os.devnull, 'w')
 
 
 def ip_check(value):
     """
-        Проверка является ли введеное значение IP-адресом
-        :param value: присланное значение
-        :return: ipv4: полученный ip адрес из переданного значения
-            Exception: ошибка при невозможности получения ip адреса из значения
+        Проверка на валидность
     """
     try:
         ipv4 = ip_address(value)
@@ -31,28 +28,26 @@ def ip_check(value):
 
 def host_ping(hostsList, getList=False):
     """
-       Проверка доступности хостов
-       :param hostsList: список хостов
-               getList: признак нужно ли одать результат в виде словаря (для задания №3)
-       :return: словарь результатов проверки, если требуется
+       Проверяем доступен ли хост
+
     """
     print('Начинаю проверку доступности узлов...')
-    for host in hostsList:  # цикл для каждого значения в переданном списке
+    for host in hostsList:  
         try:
-            ipv4 = ip_check(host)  # проверяем является ли значение ip-адресом
+            ipv4 = ip_check(host)
         except Exception as e:
             print(f"{host} - {e}, воспринимаю как доменное имя")
-            ipv4 = host                     # если не являемся, то не приводим его к ip-адресу, думае, что доменное имя
-        response = subprocess.Popen(["ping",  str(ipv4)], stdout=DNL)  # получаем результат вызова ping хост
+            ipv4 = host
+        response = subprocess.Popen(["ping",  str(ipv4)], stdout=DNL)
         if response == 0:
             result['Доступные узлы'] += f"{str(ipv4)}\n"
             resString = f'{str(ipv4)} - Узел доступен'
         else:
             result['Недоступные узлы'] += f"{ipv4}\n"
             resString = f'{str(ipv4)} - Узел недоступен'
-        if not getList:         # если результаты не надо добавлять в словарь, значит отображать их в консоли
+        if not getList:
             print(resString)
-    if getList:                # если требуется вернуть словарь (для задачи 3), то возвращаем
+    if getList:
         return result
 
 
