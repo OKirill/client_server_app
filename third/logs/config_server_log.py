@@ -8,28 +8,28 @@ from backup.variables import LOGGING_LEVEL
 sys.path.append('../')
 
 # Creating formatter:
-SERVER_FORMATTER = logging.Formatter('%(asctime)s %(levelname)s %(filename)s %(message)s')
+server_formatter = logging.Formatter('%(asctime)s %(levelname)s %(filename)s %(message)s')
 
 # Prep filename for logging
-PATH = os.path.dirname(os.path.abspath(__file__))
-PATH = os.path.join(PATH, 'server.log')
+path = os.path.dirname(os.path.abspath(__file__))
+path = os.path.join(path, 'server.log')
 
 # crating streams outputs of logs
-STREAM_HANDLER = logging.StreamHandler(sys.stderr)
-STREAM_HANDLER.setFormatter(SERVER_FORMATTER)
-STREAM_HANDLER.setLevel(logging.ERROR)
-LOG_FILE = logging.handlers.TimedRotatingFileHandler(PATH, encoding='utf8', interval=1, when='D')
-LOG_FILE.setFormatter(SERVER_FORMATTER)
+steam = logging.StreamHandler(sys.stderr)
+steam.setFormatter(server_formatter)
+steam.setLevel(logging.INFO)
+log_file = logging.handlers.TimedRotatingFileHandler(path, encoding='utf8', interval=1, when='D')
+log_file.setFormatter(server_formatter)
 
 # creating logger
-LOGGER = logging.getLogger('server')
-LOGGER.addHandler(STREAM_HANDLER)
-LOGGER.addHandler(LOG_FILE)
-LOGGER.setLevel(LOGGING_LEVEL)
+logger = logging.getLogger('server')
+logger.addHandler(steam)
+logger.addHandler(log_file)
+logger.setLevel(LOGGING_LEVEL)
 
 # maintance
 if __name__ == '__main__':
-    LOGGER.critical('Critical error')
-    LOGGER.error('Error')
-    LOGGER.debug('Debugging info')
-    LOGGER.info('Info message')
+    logger.critical('Test critical event')
+    logger.error('Test error ivent')
+    logger.debug('Test debug ivent')
+    logger.info('Test info ivent')

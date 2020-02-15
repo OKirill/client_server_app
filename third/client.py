@@ -7,103 +7,105 @@ import sys
 import json
 import socket
 import time
+import dis
 import argparse
 import logging
 import threading
 import logs.config_client_log
 from errors import ReqFieldMissingError, ServerError, IncorrectDataReceivedError
-from backup.variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, \
-    RESPONSE, ERROR, DEF_IP, DEF_PORT, MESSAGE, MESSAGE_TEXT, SENDER, DESTINATION, EXIT
-from backup.utils import rec_message, transmit_message
+from backup.variables import *
+from backup.utils import *
 from decos import log
+from metaclasses import ClientMaker
 
 # init client log
-LOGGER = logging.getLogger('client')
+logger = logging.getLogger('client')
 
 
-@log
-def create_exit_message(account_name):
-    """
-    Словарь с сообщением о выходе
-    :param account_name:
-    :return:
-    """
-    return {
-        ACTION: EXIT,
-        TIME: time.time(),
-        ACCOUNT_NAME: account_name
-    }
+class ClientSender(threading.Thread, metaclass=ClientMaker):
+    def __init__(self, account_name, sock):
+        self.account_name = account_name
+        self.sock = sock
+        super().__init__()
 
+    def create_exit_message(self):
+        return {
+            ACTION: EXIT,
+            TIME: time.time(),
+            ACCOUNT_NAME: self.account_name
+        }
 
-@log
-def transmission_from_server(sock, my_username):
-    """
-    Функция обработки сообщений переданных на сервер
-    """
-    while True:
+    def create_message(self):
+        """
+        Функция принимает данные о том кому отправить сообщение и отсылает данные на сервер
+        """
+        to_user = input('Введите имя собеседника: ')
+        message = input('Напишите ваше сообщение: ')
+        message_dict = {
+            ACTION: MESSAGE,
+            SENDER: self.account_name,
+            DESTINATION: to_user,
+            TIME: time.time(),
+            MESSAGE_TEXT: message
+        }
+        logger.debug(f'Сформирован словарь сообщения: {message_dict}')
         try:
-            message = rec_message(sock)
-            if ACTION in message and message[ACTION] == MESSAGE and \
-                    SENDER in message and DESTINATION in message \
-                    and MESSAGE_TEXT in message and message[DESTINATION] == my_username:
-                print(f'\nПолучено сообщение от пользователя {message[SENDER]}:'
-                      f'\n{message[MESSAGE_TEXT]}')
-                LOGGER.info(f'Получено сообщение от пользователя {message[SENDER]}:'
-                            f'\n{message[MESSAGE_TEXT]}')
+            transmit_message(self.sock, message_dict)
+            logger.info(f'Отправлено сообщение для пользователя {to_user}')
+        except:
+            logger.critical('Потеряно соединение с сервером.')
+            sys.exit(1)
+
+    def run(self):
+        self.print_help()
+        while True:
+            command = input('Введите команду: ')
+            if command == 'message':
+                self.create_message()
+            elif command == 'help':
+                self.print_help()
+            elif command == 'exit':
+                try:
+                    transmit_message(self.sock, self.create_exit_message())
+                except:
+                    pass
+                print('Завершение соединения.')
+                logger.info('Завершение работы по команде пользователя.')
+                # Задержка неоходима, чтобы успело уйти сообщение о выходе
+                time.sleep(0.5)
+                break
             else:
-                LOGGER.error(f'Получено некорректное сообщение с сервера: {message}')
-        except IncorrectDataReceivedError:
-            LOGGER.error(f'Не удалось декодировать полученное сообщение.')
-        except (OSError, ConnectionError, ConnectionAbortedError,
-                ConnectionResetError, json.JSONDecodeError):
-            LOGGER.critical(f'Потеряно соединение с сервером.')
-            break
+                print('Команда не распознана, попробойте снова. help - вывести поддерживаемые команды.')
+
+    def print_help(self):
+        print('Поддерживаемые команды:')
+        print('message - отправить сообщение. Кому и текст будет запрошены отдельно.')
+        print('help - вывести подсказки по командам')
+        print('exit - выход из программы')
 
 
-@log
-def create_message(sock, account_name='Guest'):
-    """
-    Функция принимает данные о том кому отправить сообщение и отсылает данные на сервер
-    """
-    to_user = input('Введите имя собеседника: ')
-    message = input('Напишите ваше сообщение: ')
-    message_dict = {
-        ACTION: MESSAGE,
-        SENDER: account_name,
-        DESTINATION: to_user,
-        TIME: time.time(),
-        MESSAGE_TEXT: message
-    }
-    LOGGER.debug(f'Сформирован словарь сообщения: {message_dict}')
-    try:
-        transmit_message(sock, message_dict)
-        LOGGER.info(f'Отправлено сообщение для пользователя {to_user}')
-    except:
-        LOGGER.critical('Потеряно соединение с сервером.')
-        sys.exit(1)
+class ClientReader(threading.Thread, metaclass=ClientMaker):
+    def __init__(self, account_name, sock):
+        self.account_name = account_name
+        self.sock = sock
+        super().__init__()
 
-
-@log
-def user_interactive(sock, username):
-    """
-    Функция запрашивает команды и занимается отправкой сообщений
-    """
-    print_help()
-    while True:
-        command = input('Введите команду: ')
-        if command == 'message':
-            create_message(sock, username)
-        elif command == 'help':
-            print_help()
-        elif command == 'exit':
-            transmit_message(sock, create_exit_message(username))
-            print('Завершение соединения.')
-            LOGGER.info('Завершение работы по команде пользователя.')
-            # Задержка сообщения
-            time.sleep(0.5)
-            break
-        else:
-            print('Команда задана неверно, попробойте снова. help - вывести поддерживаемые команды.')
+    # Основной цикл приёмника сообщений, принимает сообщения, выводит в консоль. Завершается при потере соединения.
+    def run(self):
+        while True:
+            try:
+                message = rec_message(self.sock)
+                if ACTION in message and message[ACTION] == MESSAGE and SENDER in message and DESTINATION in message \
+                        and MESSAGE_TEXT in message and message[DESTINATION] == self.account_name:
+                    print(f'\nПолучено сообщение от пользователя {message[SENDER]}:\n{message[MESSAGE_TEXT]}')
+                    logger.info(f'Получено сообщение от пользователя {message[SENDER]}:\n{message[MESSAGE_TEXT]}')
+                else:
+                    logger.error(f'Получено некорректное сообщение с сервера: {message}')
+            except IncorrectDataReceivedError:
+                logger.error(f'Не удалось декодировать полученное сообщение.')
+            except (OSError, ConnectionError, ConnectionAbortedError, ConnectionResetError, json.JSONDecodeError):
+                logger.critical(f'Потеряно соединение с сервером.')
+                break
 
 
 @log
@@ -120,18 +122,8 @@ def show_presence(account_name):
             ACCOUNT_NAME: account_name
         }
     }
-    LOGGER.debug(f'Создано {PRESENCE} сообщения для ююзера {account_name}')
+    logger.debug(f'Создано {PRESENCE} сообщения для ююзера {account_name}')
     return output
-
-
-def print_help():
-    """
-    Функция справка
-    """
-    print('Список команд:')
-    print('message - Выберите кому отправить сообщение и пошлите его!')
-    print('help - вывести подсказки по командам')
-    print('exit - выход из программы')
 
 
 @log
@@ -141,7 +133,7 @@ def ans_handling(message):
     :param message:
     :return:
     """
-    LOGGER.debug(f'Расшифровка ответа от сервера: {message}')
+    logger.debug(f'Расшифровка ответа от сервера: {message}')
     if RESPONSE in message:
         if message[RESPONSE] == 200:
             return '200 : OK'
@@ -166,12 +158,61 @@ def parser_handling():
     client_name = namespace.name
 
     if not 1023 < server_port < 65536:
-        LOGGER.critical(
+        logger.critical(
             f'Попытка запуска клиента с неподходящим номером порта: {server_port}. '
             f'Допустимы адреса с 1024 до 65535. Клиент завершается.')
         sys.exit(1)
 
     return server_address, server_port, client_name
+
+
+# @log
+# def transmission_from_server(sock, my_username):
+#     """
+#     Функция обработки сообщений переданных на сервер
+#     """
+#     while True:
+#         try:
+#             message = rec_message(sock)
+#             if ACTION in message and message[ACTION] == MESSAGE and \
+#                     SENDER in message and DESTINATION in message \
+#                     and MESSAGE_TEXT in message and message[DESTINATION] == my_username:
+#                 print(f'\nПолучено сообщение от пользователя {message[SENDER]}:'
+#                       f'\n{message[MESSAGE_TEXT]}')
+#                 logger.info(f'Получено сообщение от пользователя {message[SENDER]}:'
+#                             f'\n{message[MESSAGE_TEXT]}')
+#             else:
+#                 logger.error(f'Получено некорректное сообщение с сервера: {message}')
+#         except IncorrectDataReceivedError:
+#             logger.error(f'Не удалось декодировать полученное сообщение.')
+#         except (OSError, ConnectionError, ConnectionAbortedError,
+#                 ConnectionResetError, json.JSONDecodeError):
+#             logger.critical(f'Потеряно соединение с сервером.')
+#             break
+#
+#
+# @log
+# @log
+# def user_interactive(sock, username):
+#     """
+#     Функция запрашивает команды и занимается отправкой сообщений
+#     """
+#     print_help()
+#     while True:
+#         command = input('Введите команду: ')
+#         if command == 'message':
+#             create_message(sock, username)
+#         elif command == 'help':
+#             print_help()
+#         elif command == 'exit':
+#             transmit_message(sock, create_exit_message(username))
+#             print('Завершение соединения.')
+#             logger.info('Завершение работы по команде пользователя.')
+#             # Задержка сообщения
+#             time.sleep(0.5)
+#             break
+#         else:
+#             print('Команда задана неверно, попробойте снова. help - вывести поддерживаемые команды.')
 
 
 def main():
@@ -185,74 +226,54 @@ def main():
     # Запрашиваем имя пользователя если не было задано изначально
     if not client_name:
         client_name = input('Введите имя пользователя: ')
+    else:
+        print(f'Клиентский модуль запущен с именем: {client_name}')
 
-    LOGGER.info(
+    logger.info(
         f'Запущен клиент с парамертами: адрес сервера: {server_address}, '
         f'порт: {server_port}, режим работы: {client_name}')
 
-    # if not 1023 < server_port < 65536:
-    #     LOGGER.critical(
-    #         f'Запуск клиента с неправильным портом: {server_port}.'
-    #         f' Используйте адреса в диапазоне 1024-65535.'
-    #     )
-    #     sys.exit(1)
-    #
-    # LOGGER.info(
-    #     f'Клиент работает с параметрами:'
-    #     f'адрес сервера: {server_address}, порт: {server_port}'
-    # )
-    # try:
-    #     server_address = sys.argv[1]
-    #     server_port = input(sys.argv[2])
-    #     if server_port < 1024 or server_port > 65535:
-    #         raise ValueError
-    # except IndexError:
-    #     server_address = DEF_IP
-    #     server_port = DEF_PORT
-    # except ValueError:
-    #     print('Укажите чилос в диапазоне 1024 - 65535')
-    #     sys.exit(1)
     try:
         forward = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         forward.connect((server_address, server_port))
         transmit_message(forward, show_presence(client_name))
         answer = ans_handling(rec_message(forward))
-        LOGGER.info(f'Получен ответ от сервера {answer}')
+        logger.info(f'Получен ответ от сервера {answer}')
         print(f'Установлено соединение с сервером.')
     except json.JSONDecodeError:
-        LOGGER.error('Не удалось декодировать полученную Json строку.')
+        logger.error('Не удалось декодировать полученную Json строку.')
         sys.exit(1)
     except ServerError as error:
-        LOGGER.error(f'Сервер выявил ошибку при подключении: {error.text}')
+        logger.error(f'Сервер выявил ошибку при подключении: {error.text}')
         sys.exit(1)
     except ReqFieldMissingError as miss_error:
-        LOGGER.error(
+        logger.error(
             f'В полученных данных отсутствует необходимое поле'
             f'{miss_error.missing_field}'
         )
         sys.exit(1)
     except (ConnectionRefusedError, ConnectionError):
-        LOGGER.critical(
+        logger.critical(
             f'Не удалось соедениться с сервером {server_address}:{server_port}, '
             f'удаленный компьютер отверг запрос на подключение.')
         sys.exit(1)
     else:
         # запускаем процесс приема сообщений если все настроено верно
-        receiver = threading.Thread(target=transmission_from_server, args=(forward, client_name))
-        receiver.daemon = True
-        receiver.start()
+        module_reciver = ClientReader(client_name, forward)
+        module_reciver.daemon = True
+        module_reciver.start()
 
-        # запуск процесса отправки сообщений.
-        user_interface = threading.Thread(target=user_interactive, args=(forward, client_name))
-        user_interface.daemon = True
-        user_interface.start()
-        LOGGER.debug('Запущены процессы')
+        # затем запускаем отправку сообщений и взаимодействие с пользователем.
+        module_sender = ClientSender(client_name, forward)
+        module_sender.daemon = True
+        module_sender.start()
+        logger.debug('Запущены процессы')
 
         # основной цикл которой отрабатывает пока не потеряно соединение
         # или пользователь не вышел через exit
         while True:
             time.sleep(1)
-            if receiver.is_alive() and user_interface.is_alive():
+            if module_reciver.is_alive() and module_sender.is_alive():
                 continue
             break
 

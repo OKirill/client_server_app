@@ -2,7 +2,7 @@
 import logging
 
 
-DEF_PORT = 7777
+DEF_PORT = 23456
 
 DEF_IP = '127.0.0.1'
 
