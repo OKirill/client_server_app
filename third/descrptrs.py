@@ -1,5 +1,7 @@
 import logging
+
 logger = logging.getLogger('server')
+
 
 # Дескриптор для описания порта:
 class Port:
@@ -17,4 +19,3 @@ class Port:
         # owner - <class '__main__.Server'>
         # name - port
         self.name = name
-
