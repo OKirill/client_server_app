@@ -19,10 +19,9 @@ def rec_message(client):
         response = json.loads(json_resp)
         if isinstance(response, dict):
             return response
-        else:
-            raise IncorrectDataReceivedError
-    else:
+
         raise IncorrectDataReceivedError
+    raise IncorrectDataReceivedError
 
 
 @log

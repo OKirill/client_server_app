@@ -22,8 +22,6 @@ ACCOUNT_NAME = 'account_name'
 SENDER = 'from'
 DESTINATION = 'to'
 # Дополнительные ключи для протокола
-SERVER_DATABASE = 'sqlite:///server_base.db3'
-
 
 PRESENCE = 'presence'
 RESPONSE = 'response'
