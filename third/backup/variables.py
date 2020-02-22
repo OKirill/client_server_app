@@ -2,7 +2,7 @@
 import logging
 
 
-DEF_PORT = 23456
+DEF_PORT = 7777
 
 DEF_IP = '127.0.0.1'
 
@@ -13,6 +13,9 @@ MAX_BYTES_LENGTH = 1024
 ENCODING = 'utf-8'
 
 LOGGING_LEVEL = logging.DEBUG
+
+SERVER_DATABASE = 'sqlite:///server_base.db3'
+
 # ОСНОВНЫЕ КЛЮЧИ JIM ПРОТОКОЛА:
 
 ACTION = 'action'
@@ -22,7 +25,6 @@ ACCOUNT_NAME = 'account_name'
 SENDER = 'from'
 DESTINATION = 'to'
 # Дополнительные ключи для протокола
-SERVER_DATABASE = 'sqlite:///server_base.db3'
 
 
 PRESENCE = 'presence'
